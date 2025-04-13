@@ -716,4 +716,63 @@ router.post('/folder/rename/:id', (req, res) => {
   }); // End serialize
 });
 
+// Download file
+router.get('/download/:id', (req, res) => {
+  const fileId = req.params.id;
+  const loggedInUser = req.session.user;
+
+  // Determine the target user ID from query param if admin
+  let targetUserId = loggedInUser.id;
+  if (loggedInUser.isAdmin && req.query.userId) {
+    const parsedUserId = parseInt(req.query.userId, 10);
+    if (!isNaN(parsedUserId)) {
+      targetUserId = parsedUserId;
+    } else {
+      return res.status(400).send('شناسه کاربر نامعتبر در درخواست دانلود');
+    }
+  }
+
+  // Get file information
+  db.get(
+    'SELECT * FROM files WHERE id = ? AND userId = ?',
+    [fileId, targetUserId],
+    (err, file) => {
+      if (err) {
+        console.error('Error getting file for download:', err);
+        return res.status(500).send('خطا در دانلود فایل');
+      }
+      if (!file) {
+        return res.status(404).send('فایل مورد نظر یافت نشد یا به کاربر تعلق ندارد');
+      }
+
+      // Construct the absolute path to the file on the server
+      // Assuming file.path is like '/uploads/USER_ID/filename.ext'
+      const absoluteFilePath = path.join(__dirname, '../../public', file.path);
+
+      // Check if file exists physically
+      if (!fs.existsSync(absoluteFilePath)) {
+        console.error(`File not found at path for download: ${absoluteFilePath}`);
+        return res.status(404).send('فایل روی سرور یافت نشد. ممکن است حذف شده باشد.');
+      }
+
+      // Use res.download to send the file
+      // It sets Content-Disposition header for download prompt
+      // The third argument sets the filename the user will see
+      res.download(absoluteFilePath, file.originalName, (downloadErr) => {
+        if (downloadErr) {
+          // Handle errors that occur after headers may have been sent
+          // For example, if the connection is lost mid-download
+          console.error('Error during file download transmission:', downloadErr);
+          // Cannot send new headers if some were already sent
+          if (!res.headersSent) {
+            res.status(500).send('خطایی هنگام ارسال فایل رخ داد.');
+          }
+        }
+        // Optionally log the download operation here if needed
+        // db.run('INSERT INTO file_operations...')
+      });
+    }
+  );
+});
+
 module.exports = router; 

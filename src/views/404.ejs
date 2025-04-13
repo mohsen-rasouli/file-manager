@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - صفحه یافت نشد</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .error-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+    }
+    .error-code {
+      font-size: 140px;
+      font-weight: bold;
+      color: #0d6efd;
+      line-height: 1;
+      margin-bottom: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .error-divider {
+      width: 100px;
+      height: 4px;
+      background-color: #ffc107;
+      margin: 20px auto;
+      border-radius: 2px;
+    }
+    .error-message {
+      font-size: 24px;
+      color: #495057;
+      margin-bottom: 15px;
+    }
+    .error-details {
+      font-size: 18px;
+      color: #6c757d;
+      max-width: 600px;
+      margin-bottom: 30px;
+    }
+    .error-icon {
+      font-size: 120px;
+      color: #ffc107;
+      margin-bottom: 20px;
+      filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+    }
+    .back-home {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .footer {
+      margin-top: 20px;
+      padding: 15px 0;
+      background-color: #f8f9fa;
+      border-top: 1px solid #e7e7e7;
+      text-align: center;
+      font-size: 14px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <main class="error-container">
+    <i class="bi bi-folder2-open error-icon"></i>
+    <h1 class="error-code">404</h1>
+    <div class="error-divider"></div>
+    <h2 class="error-message">صفحه مورد نظر یافت نشد</h2>
+    <p class="error-details">صفحه یا فایلی که به دنبال آن هستید ممکن است حذف شده، نام آن تغییر کرده یا موقتاً در دسترس نباشد.</p>
+    <a href="/" class="btn btn-primary btn-lg back-home">
+      <i class="bi bi-house-door"></i> بازگشت به صفحه اصلی
+    </a>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p class="mb-0">سیستم مدیریت فایل &copy; <%=new Date().getFullYear()%></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -4,73 +4,175 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ورود به سیستم</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
   <style>
     body {
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .login-container {
-      max-width: 400px;
-      margin: 100px auto;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+      padding: 35px 30px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    .login-container:hover {
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .login-logo {
+      font-size: 50px;
+      color: #6246ea;
+      margin-bottom: 15px;
     }
     .form-title {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #0d6efd;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .form-subtitle {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    .form-control {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 15px;
+      background-color: #f5f5f5;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .form-control:focus {
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(98, 70, 234, 0.2);
+    }
+    .input-group-text {
+      border: none;
+      background-color: #f5f5f5;
+      color: #6246ea;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #6246ea, #8e5cf8);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 12px;
+      transition: all 0.3s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(98, 70, 234, 0.4);
     }
     .form-footer {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 30px;
+      color: #666;
       font-size: 14px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+    .alert-danger {
+      background-color: rgba(220, 53, 69, 0.1);
+      color: #dc3545;
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+    }
+    @media (max-width: 576px) {
+      .login-container {
+        padding: 25px 20px;
+        margin: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="login-container">
-      <h2 class="form-title">ورود به سیستم مدیریت فایل</h2>
-      
-      <% if (error) { %>
-        <div class="alert alert-danger">
-          <%= error %>
-        </div>
-      <% } %>
-      
-      <form action="/auth/login" method="POST">
-        <div class="mb-3">
-          <label for="phone" class="form-label">شماره تلفن</label>
-          <div class="input-group">
-            <input type="text" class="form-control" id="phone" name="phone" required>
-            <span class="input-group-text"><i class="bi bi-phone"></i></span>
-          </div>
-        </div>
-        
-        <div class="mb-3">
-          <label for="password" class="form-label">رمز عبور</label>
-          <div class="input-group">
-            <input type="password" class="form-control" id="password" name="password" required>
-            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-          </div>
-        </div>
-        
-        <div class="d-grid gap-2">
-          <button type="submit" class="btn btn-primary">ورود</button>
-        </div>
-      </form>
-      
-      <div class="form-footer">
-        <p>ورود به سیستم مدیریت فایل شرکت</p>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">
+        <i class="bi bi-folder2-open"></i>
       </div>
+      <h2 class="form-title">خوش آمدید</h2>
+      <p class="form-subtitle">برای ورود به سیستم مدیریت فایل، اطلاعات خود را وارد کنید</p>
+    </div>
+    
+    <% if (error) { %>
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <%= error %>
+      </div>
+    <% } %>
+    
+    <form action="/auth/login" method="POST">
+      <div class="mb-4">
+        <label for="phone" class="form-label fw-bold mb-2">شماره تلفن</label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="phone" name="phone" placeholder="شماره تلفن خود را وارد کنید" required autofocus>
+          <span class="input-group-text"><i class="bi bi-phone"></i></span>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <div class="d-flex justify-content-between">
+          <label for="password" class="form-label fw-bold mb-2">رمز عبور</label>
+          <a href="#" class="text-decoration-none small">فراموشی رمز؟</a>
+        </div>
+        <div class="input-group">
+          <input type="password" class="form-control" id="password" name="password" placeholder="رمز عبور خود را وارد کنید" required>
+          <span class="input-group-text password-toggle" role="button" onclick="togglePassword()">
+            <i class="bi bi-eye-slash" id="toggleIcon"></i>
+          </span>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="remember">
+          <label class="form-check-label" for="remember">
+            مرا به خاطر بسپار
+          </label>
+        </div>
+      </div>
+      
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-box-arrow-in-left me-2"></i>ورود
+        </button>
+      </div>
+    </form>
+    
+    <div class="form-footer">
+      <p class="mb-0">سیستم مدیریت فایل‌ها | تمامی حقوق محفوظ است &copy; <%= new Date().getFullYear() %></p>
     </div>
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.replace('bi-eye-slash', 'bi-eye');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.replace('bi-eye', 'bi-eye-slash');
+      }
+    }
+  </script>
 </body>
 </html> 

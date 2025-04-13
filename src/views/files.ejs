@@ -86,7 +86,7 @@
               <% } %>
               
               <% folders.forEach(function(folder) { %>
-                <tr>
+                <tr class="folder-row">
                   <td><i class="bi bi-folder text-warning"></i></td>
                   <td>
                     <a href="/files?<%= isAdminView && selectedUser ? 'userId=' + selectedUser.id + '&' : '' %>folderId=<%= folder.id %>"><%= folder.name %></a>
@@ -138,12 +138,17 @@
                   </td>
                   <td>
                     <%# File link - Use file.path which should be correct relative to public %>
-                    <a href="<%= file.path %>" target="_blank"><%= file.originalName %></a>
+                    <a href="/files/download/<%= file.id %>?userId=<%= isAdminView && selectedUser ? selectedUser.id : '' %>" target="_blank"><%= file.originalName %></a>
                   </td>
                   <td><%= file.mimeType.split('/')[1] %></td>
                   <td><%= formatBytes(file.size) %></td>
                   <td><%= new Date(file.createdAt).toLocaleString('fa-IR') %></td>
                   <td>
+                    <a href="/files/download/<%= file.id %>?userId=<%= isAdminView && selectedUser ? selectedUser.id : '' %>" 
+                       class="btn btn-sm btn-success" 
+                       title="دانلود">
+                      <i class="bi bi-download"></i>
+                    </a>
                     <button class="btn btn-sm btn-info" 
                             data-bs-toggle="modal" 
                             data-bs-target="#renameFileModal" 

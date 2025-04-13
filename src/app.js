@@ -64,6 +64,11 @@ app.get('/', (req, res) => {
   res.redirect('/files');
 });
 
+// 404 handler for all undefined routes
+app.use((req, res) => {
+  res.status(404).render('404');
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
