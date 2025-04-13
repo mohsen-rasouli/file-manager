@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { db } = require('../models/database');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { formatBytes } = require('../utils/helpers');
 
 const router = express.Router();
 
@@ -297,59 +298,30 @@ router.get('/delete/:id', (req, res) => {
 router.get('/logs/:id', (req, res) => {
   const userId = req.params.id;
   
-  // Get user info
-  db.get('SELECT name, phone FROM users WHERE id = ?', [userId], (err, userData) => {
-    if (err) {
-      console.error('Error getting user:', err);
-      return res.status(500).render('error', { 
-        message: 'خطا در دریافت اطلاعات کاربر',
-        error: { status: 500 }
-      });
+  // Get user data
+  db.get('SELECT id, name, phone FROM users WHERE id = ?', [userId], (err, userData) => {
+    if (err || !userData) {
+      console.error('Error getting user data for logs:', err);
+      return res.status(404).render('error', { message: 'کاربر مورد نظر یافت نشد', error: { status: 404 } });
     }
-    
-    if (!userData) {
-      return res.status(404).render('error', { 
-        message: 'کاربر مورد نظر یافت نشد',
-        error: { status: 404 }
-      });
-    }
-    
+
     // Get login logs
-    db.all(
-      'SELECT * FROM login_logs WHERE userId = ? ORDER BY loginAt DESC',
-      [userId],
-      (err, loginLogs) => {
-        if (err) {
-          console.error('Error getting login logs:', err);
-          return res.status(500).render('error', { 
-            message: 'خطا در دریافت گزارش ورود',
-            error: { status: 500 }
-          });
-        }
-        
-        // Get file operations
-        db.all(
-          'SELECT * FROM file_operations WHERE userId = ? ORDER BY createdAt DESC',
-          [userId],
-          (err, fileOps) => {
-            if (err) {
-              console.error('Error getting file operations:', err);
-              return res.status(500).render('error', { 
-                message: 'خطا در دریافت گزارش عملیات',
-                error: { status: 500 }
-              });
-            }
-            
-            res.render('user-logs', {
-              user: req.session.user,
-              userData,
-              loginLogs,
-              fileOps
-            });
-          }
-        );
-      }
-    );
+    db.all('SELECT * FROM login_logs WHERE userId = ? ORDER BY loginAt DESC', [userId], (err, loginLogs) => {
+      if (err) console.error('Error getting login logs for user:', err);
+
+      // Get file operation logs
+      db.all('SELECT * FROM file_operations WHERE userId = ? ORDER BY createdAt DESC', [userId], (err, fileOps) => {
+        if (err) console.error('Error getting file operations for user:', err);
+
+        res.render('user-logs', {
+          user: req.session.user,
+          userData,
+          loginLogs: loginLogs || [],
+          fileOps: fileOps || [],
+          formatBytes
+        });
+      });
+    });
   });
 });
 

@@ -1,225 +1,325 @@
-<%- include('blocks/header', { title: 'مدیریت فایل‌ها', active: 'files', showSidebar: true }) %>
+<%- include('blocks/header', { 
+  title: isAdminView ? (selectedUser ? `فایل‌های کاربر: ${selectedUser.name}` : 'انتخاب کاربر') : 'مدیریت فایل‌ها', 
+  active: 'files', 
+  showSidebar: true 
+}) %>
 
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">
-      <i class="bi bi-folder"></i> 
-      <% if (folderPath.length > 0 || currentFolder.id) { %>
-        مسیر: 
-        <a href="/files">ریشه</a>
-        <% folderPath.forEach(function(folder) { %>
-          / <a href="/files?folderId=<%= folder.id %>"><%= folder.name %></a>
+<% if (isAdminView && !selectedUser) { %>
+  <%# Admin initial view: Show user list %>
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="bi bi-people"></i> انتخاب کاربر برای مدیریت فایل‌ها</h5>
+    </div>
+    <div class="card-body">
+      <div class="list-group">
+        <% users.forEach(function(u) { %>
+          <a href="/files?userId=<%= u.id %>" class="list-group-item list-group-item-action">
+            <i class="bi bi-person"></i> <%= u.name %> (<%= u.phone %>)
+          </a>
         <% }); %>
-        <% if (currentFolder.id) { %>
-          / <%= currentFolder.name %>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <%# Regular user view OR Admin viewing a specific user %>
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <% if (isAdminView && selectedUser) { %>
+          <i class="bi bi-person-check"></i> 
+          مدیریت فایل‌های: <strong><%= selectedUser.name %></strong>
+          <a href="/files" class="btn btn-sm btn-outline-secondary ms-2" title="بازگشت به لیست کاربران"><i class="bi bi-arrow-left"></i></a>
+          <span class="mx-2 text-muted">|</span>
         <% } %>
+        <i class="bi bi-folder"></i> 
+        <% if (folderPath.length > 0 || currentFolder.id) { %>
+          مسیر: 
+          <a href="/files<%= isAdminView && selectedUser ? '?userId=' + selectedUser.id : '' %>">ریشه</a>
+          <% folderPath.forEach(function(folder) { %>
+            / <a href="/files?<%= isAdminView && selectedUser ? 'userId=' + selectedUser.id + '&' : '' %>folderId=<%= folder.id %>"><%= folder.name %></a>
+          <% }); %>
+          <% if (currentFolder.id) { %>
+            / <%= currentFolder.name %>
+          <% } %>
+        <% } else { %>
+          فایل‌های <%= isAdminView && selectedUser ? selectedUser.name : 'من' %>
+        <% } %>
+      </h5>
+      <div>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createFolderModal">
+          <i class="bi bi-folder-plus"></i> ایجاد پوشه
+        </button>
+        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
+          <i class="bi bi-upload"></i> آپلود فایل
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if (folders.length === 0 && files.length === 0) { %>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> این پوشه خالی است.
+        </div>
       <% } else { %>
-        فایل‌های من
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th style="width: 50px;"></th>
+                <th>نام</th>
+                <th>نوع</th>
+                <th>اندازه</th>
+                <th>تاریخ ایجاد</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%# Back link - Adjust link based on admin view %>
+              <% if (parentId) { %>
+                <tr>
+                  <td><i class="bi bi-arrow-up-circle text-primary"></i></td>
+                  <td colspan="5">
+                    <a href="/files?<%= isAdminView && selectedUser ? 'userId=' + selectedUser.id + '&' : '' %><%= currentFolder.parentId ? 'folderId=' + currentFolder.parentId : '' %>">
+                      ../ بازگشت به پوشه قبلی
+                    </a>
+                  </td>
+                </tr>
+              <% } %>
+              
+              <% folders.forEach(function(folder) { %>
+                <tr>
+                  <td><i class="bi bi-folder text-warning"></i></td>
+                  <td>
+                    <a href="/files?<%= isAdminView && selectedUser ? 'userId=' + selectedUser.id + '&' : '' %>folderId=<%= folder.id %>"><%= folder.name %></a>
+                  </td>
+                  <td>پوشه</td>
+                  <td>-</td>
+                  <td><%= new Date(folder.createdAt).toLocaleString('fa-IR') %></td>
+                  <td>
+                    <button class="btn btn-sm btn-info" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#renameFolderModal" 
+                            data-folder-id="<%= folder.id %>" 
+                            data-folder-name="<%= folder.name %>"
+                            data-user-id="<%= isAdminView && selectedUser ? selectedUser.id : '' %>">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <a href="/files/folder/delete/<%= folder.id %>?userId=<%= isAdminView && selectedUser ? selectedUser.id : '' %>" 
+                       class="btn btn-sm btn-danger" 
+                       onclick="return confirm('آیا از حذف این پوشه اطمینان دارید؟ تمام محتویات آن نیز حذف خواهد شد.')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+              
+              <% files.forEach(function(file) { %>
+                <tr>
+                  <td>
+                    <%# File icons %>
+                    <% if (file.mimeType.startsWith('image/')) { %>
+                      <i class="bi bi-file-image text-info"></i>
+                    <% } else if (file.mimeType.startsWith('audio/')) { %>
+                      <i class="bi bi-file-music text-success"></i>
+                    <% } else if (file.mimeType.startsWith('video/')) { %>
+                      <i class="bi bi-file-play text-danger"></i>
+                    <% } else if (file.mimeType.startsWith('text/')) { %>
+                      <i class="bi bi-file-text text-primary"></i>
+                    <% } else if (file.mimeType.includes('pdf')) { %>
+                      <i class="bi bi-file-pdf text-danger"></i>
+                    <% } else if (file.mimeType.includes('word') || file.mimeType.includes('document')) { %>
+                      <i class="bi bi-file-word text-primary"></i>
+                    <% } else if (file.mimeType.includes('excel') || file.mimeType.includes('spreadsheet')) { %>
+                      <i class="bi bi-file-excel text-success"></i>
+                    <% } else if (file.mimeType.includes('zip') || file.mimeType.includes('rar') || file.mimeType.includes('compressed')) { %>
+                      <i class="bi bi-file-zip text-warning"></i>
+                    <% } else { %>
+                      <i class="bi bi-file-earmark"></i>
+                    <% } %>
+                  </td>
+                  <td>
+                    <%# File link - Use file.path which should be correct relative to public %>
+                    <a href="<%= file.path %>" target="_blank"><%= file.originalName %></a>
+                  </td>
+                  <td><%= file.mimeType.split('/')[1] %></td>
+                  <td><%= formatBytes(file.size) %></td>
+                  <td><%= new Date(file.createdAt).toLocaleString('fa-IR') %></td>
+                  <td>
+                    <button class="btn btn-sm btn-info" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#renameFileModal" 
+                            data-file-id="<%= file.id %>" 
+                            data-file-name="<%= file.originalName %>"
+                            data-user-id="<%= isAdminView && selectedUser ? selectedUser.id : '' %>">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <a href="/files/delete/<%= file.id %>?userId=<%= isAdminView && selectedUser ? selectedUser.id : '' %>" 
+                       class="btn btn-sm btn-danger" 
+                       onclick="return confirm('آیا از حذف این فایل اطمینان دارید؟')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
       <% } %>
-    </h5>
-    <div>
-      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createFolderModal">
-        <i class="bi bi-folder-plus"></i> ایجاد پوشه
-      </button>
-      <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
-        <i class="bi bi-upload"></i> آپلود فایل
-      </button>
     </div>
   </div>
-  <div class="card-body">
-    <% if (folders.length === 0 && files.length === 0) { %>
-      <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> این پوشه خالی است.
-      </div>
-    <% } else { %>
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th style="width: 50px;"></th>
-              <th>نام</th>
-              <th>نوع</th>
-              <th>اندازه</th>
-              <th>تاریخ ایجاد</th>
-              <th>عملیات</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (parentId) { %>
-              <tr>
-                <td><i class="bi bi-arrow-up-circle text-primary"></i></td>
-                <td colspan="5">
-                  <a href="/files<%= currentFolder.parentId ? '?folderId=' + currentFolder.parentId : '' %>">
-                    ../ بازگشت به پوشه قبلی
-                  </a>
-                </td>
-              </tr>
+
+  <!-- Create Folder Modal -->
+  <div class="modal fade" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createFolderModalLabel">ایجاد پوشه جدید <%= isAdminView && selectedUser ? 'برای ' + selectedUser.name : '' %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/files/folder" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="folderName" class="form-label">نام پوشه</label>
+              <input type="text" class="form-control" id="folderName" name="name" required>
+            </div>
+            <input type="hidden" name="parentId" value="<%= parentId %>">
+            <%# Add hidden userId field if admin is viewing a user %>
+            <% if (isAdminView && selectedUser) { %>
+              <input type="hidden" name="userId" value="<%= selectedUser.id %>">
             <% } %>
-            
-            <% folders.forEach(function(folder) { %>
-              <tr>
-                <td><i class="bi bi-folder text-warning"></i></td>
-                <td>
-                  <a href="/files?folderId=<%= folder.id %>"><%= folder.name %></a>
-                </td>
-                <td>پوشه</td>
-                <td>-</td>
-                <td><%= new Date(folder.createdAt).toLocaleString('fa-IR') %></td>
-                <td>
-                  <a href="/files/folder/delete/<%= folder.id %>" class="btn btn-sm btn-danger" onclick="return confirm('آیا از حذف این پوشه اطمینان دارید؟')">
-                    <i class="bi bi-trash"></i>
-                  </a>
-                </td>
-              </tr>
-            <% }); %>
-            
-            <% files.forEach(function(file) { %>
-              <tr>
-                <td>
-                  <% if (file.mimeType.startsWith('image/')) { %>
-                    <i class="bi bi-file-image text-info"></i>
-                  <% } else if (file.mimeType.startsWith('audio/')) { %>
-                    <i class="bi bi-file-music text-success"></i>
-                  <% } else if (file.mimeType.startsWith('video/')) { %>
-                    <i class="bi bi-file-play text-danger"></i>
-                  <% } else if (file.mimeType.startsWith('text/')) { %>
-                    <i class="bi bi-file-text text-primary"></i>
-                  <% } else if (file.mimeType.includes('pdf')) { %>
-                    <i class="bi bi-file-pdf text-danger"></i>
-                  <% } else if (file.mimeType.includes('word') || file.mimeType.includes('document')) { %>
-                    <i class="bi bi-file-word text-primary"></i>
-                  <% } else if (file.mimeType.includes('excel') || file.mimeType.includes('spreadsheet')) { %>
-                    <i class="bi bi-file-excel text-success"></i>
-                  <% } else if (file.mimeType.includes('zip') || file.mimeType.includes('rar') || file.mimeType.includes('compressed')) { %>
-                    <i class="bi bi-file-zip text-warning"></i>
-                  <% } else { %>
-                    <i class="bi bi-file-earmark"></i>
-                  <% } %>
-                </td>
-                <td>
-                  <a href="<%= file.path %>" target="_blank"><%= file.originalName %></a>
-                </td>
-                <td><%= file.mimeType.split('/')[1] %></td>
-                <td><%= formatBytes(file.size) %></td>
-                <td><%= new Date(file.createdAt).toLocaleString('fa-IR') %></td>
-                <td>
-                  <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#renameFileModal" data-file-id="<%= file.id %>" data-file-name="<%= file.originalName %>">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <a href="/files/delete/<%= file.id %>" class="btn btn-sm btn-danger" onclick="return confirm('آیا از حذف این فایل اطمینان دارید؟')">
-                    <i class="bi bi-trash"></i>
-                  </a>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
-    <% } %>
-  </div>
-</div>
-
-<!-- Create Folder Modal -->
-<div class="modal fade" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createFolderModalLabel">ایجاد پوشه جدید</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="/files/folder" method="POST">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="folderName" class="form-label">نام پوشه</label>
-            <input type="text" class="form-control" id="folderName" name="name" required>
           </div>
-          <input type="hidden" name="parentId" value="<%= parentId %>">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-          <button type="submit" class="btn btn-primary">ایجاد</button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary">ایجاد</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Upload File Modal -->
-<div class="modal fade" id="uploadFileModal" tabindex="-1" aria-labelledby="uploadFileModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="uploadFileModalLabel">آپلود فایل</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="/files/upload" method="POST" enctype="multipart/form-data">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="file" class="form-label">انتخاب فایل</label>
-            <input class="form-control" type="file" id="file" name="file" required>
+  <!-- Upload File Modal -->
+  <div class="modal fade" id="uploadFileModal" tabindex="-1" aria-labelledby="uploadFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadFileModalLabel">آپلود فایل <%= isAdminView && selectedUser ? 'برای ' + selectedUser.name : '' %></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/files/upload" method="POST" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="file" class="form-label">انتخاب فایل</label>
+              <input class="form-control" type="file" id="file" name="file" required>
+            </div>
+            <input type="hidden" name="folderId" value="<%= parentId %>">
+            <%# Add hidden userId field if admin is viewing a user %>
+            <% if (isAdminView && selectedUser) { %>
+              <input type="hidden" name="userId" value="<%= selectedUser.id %>">
+            <% } %>
           </div>
-          <input type="hidden" name="folderId" value="<%= parentId %>">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-          <button type="submit" class="btn btn-primary">آپلود</button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary">آپلود</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Rename File Modal -->
-<div class="modal fade" id="renameFileModal" tabindex="-1" aria-labelledby="renameFileModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="renameFileModalLabel">تغییر نام فایل</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="renameFileForm" action="" method="POST">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="newFileName" class="form-label">نام جدید</label>
-            <input type="text" class="form-control" id="newFileName" name="newName" required>
+  <!-- Rename File Modal -->
+  <div class="modal fade" id="renameFileModal" tabindex="-1" aria-labelledby="renameFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="renameFileModalLabel">تغییر نام فایل</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="renameFileForm" action="" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="newFileName" class="form-label">نام جدید</label>
+              <input type="text" class="form-control" id="newFileName" name="newName" required>
+            </div>
+            <%# Add hidden userId field if admin is viewing a user %>
+            <% if (isAdminView && selectedUser) { %>
+              <input type="hidden" name="userId" value="<%= selectedUser.id %>">
+            <% } %>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
-          <button type="submit" class="btn btn-primary">ذخیره</button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  // Helper function to format bytes
-  function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  }
-  
-  // Setup rename file modal
-  const renameFileModal = document.getElementById('renameFileModal');
-  renameFileModal.addEventListener('show.bs.modal', function (event) {
-    const button = event.relatedTarget;
-    const fileId = button.getAttribute('data-file-id');
-    const fileName = button.getAttribute('data-file-name');
-    
-    const form = renameFileModal.querySelector('#renameFileForm');
-    const nameInput = renameFileModal.querySelector('#newFileName');
-    
-    form.action = `/files/rename/${fileId}`;
-    nameInput.value = fileName;
-  });
-</script>
+  <!-- Rename Folder Modal -->
+  <div class="modal fade" id="renameFolderModal" tabindex="-1" aria-labelledby="renameFolderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="renameFolderModalLabel">تغییر نام پوشه</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="renameFolderForm" action="" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="newFolderName" class="form-label">نام جدید پوشه</label>
+              <input type="text" class="form-control" id="newFolderName" name="newFolderName" required>
+            </div>
+            <%# Add hidden userId field if admin is viewing a user %>
+            <% if (isAdminView && selectedUser) { %>
+              <input type="hidden" name="userId" value="<%= selectedUser.id %>">
+            <% } %>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Setup rename file modal - Add userId to action URL if admin view
+    const renameFileModal = document.getElementById('renameFileModal');
+    renameFileModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const fileId = button.getAttribute('data-file-id');
+      const fileName = button.getAttribute('data-file-name');
+      const targetUserId = button.getAttribute('data-user-id'); // Get userId if set
+      
+      const form = renameFileModal.querySelector('#renameFileForm');
+      const nameInput = renameFileModal.querySelector('#newFileName');
+      
+      let actionUrl = `/files/rename/${fileId}`;
+      if (targetUserId) {
+        actionUrl += `?userId=${targetUserId}`;
+      }
+      form.action = actionUrl;
+      nameInput.value = fileName;
+    });
+
+    // Setup rename folder modal - Add userId to action URL if admin view
+    const renameFolderModal = document.getElementById('renameFolderModal');
+    renameFolderModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const folderId = button.getAttribute('data-folder-id');
+      const folderName = button.getAttribute('data-folder-name');
+      const targetUserId = button.getAttribute('data-user-id'); // Get userId if set
+      
+      const form = renameFolderModal.querySelector('#renameFolderForm');
+      const nameInput = renameFolderModal.querySelector('#newFolderName');
+      
+      let actionUrl = `/files/folder/rename/${folderId}`;
+      if (targetUserId) {
+        actionUrl += `?userId=${targetUserId}`;
+      }
+      form.action = actionUrl;
+      nameInput.value = folderName;
+    });
+  </script>
+<% } %>
 
 <%- include('blocks/footer') %> 

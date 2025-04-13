@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { db } = require('../models/database');
 const { isAuthenticated } = require('../middleware/auth');
+const { formatBytes } = require('../utils/helpers');
 
 const router = express.Router();
 
@@ -77,7 +78,8 @@ router.get('/', (req, res) => {
                     formatted: formatBytes(storage ? storage.totalSize || 0 : 0)
                   },
                   success: req.query.success || null,
-                  error: null
+                  error: null,
+                  formatBytes
                 });
               }
             );
@@ -258,18 +260,5 @@ router.post('/edit', (req, res) => {
     });
   });
 });
-
-// Helper function to format bytes
-function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
 
 module.exports = router; 

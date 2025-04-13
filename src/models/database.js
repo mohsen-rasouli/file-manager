@@ -60,7 +60,7 @@ function initDatabase() {
       path TEXT NOT NULL,
       size INTEGER NOT NULL,
       mimeType TEXT NOT NULL,
-      folderId INTEGER NOT NULL,
+      folderId INTEGER,
       userId INTEGER NOT NULL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (folderId) REFERENCES folders(id),

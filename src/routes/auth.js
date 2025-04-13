@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const { db } = require('../models/database');
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 // Login page
@@ -12,24 +13,8 @@ router.get('/login', (req, res) => {
 });
 
 // Register page
-router.get('/register', (req, res) => {
-  if (req.session.user) {
-    return res.redirect('/');
-  }
-  
-  // Only admins can access the registration page, unless it's the first user
-  db.get('SELECT COUNT(*) as count FROM users', (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send('Database error');
-    }
-    
-    if (result.count === 0 || (req.session.user && req.session.user.isAdmin)) {
-      res.render('register', { error: null });
-    } else {
-      res.redirect('/auth/login');
-    }
-  });
+router.get('/register', isAuthenticated, isAdmin, (req, res) => {
+  res.render('register', { error: null });
 });
 
 // Login process
@@ -86,7 +71,7 @@ router.post('/login', (req, res) => {
 });
 
 // Register process
-router.post('/register', (req, res) => {
+router.post('/register', isAuthenticated, isAdmin, (req, res) => {
   const { name, phone, password, confirmPassword } = req.body;
   
   // Validate form data
