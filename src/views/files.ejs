@@ -1,0 +1,225 @@
+<%- include('blocks/header', { title: 'مدیریت فایل‌ها', active: 'files', showSidebar: true }) %>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="bi bi-folder"></i> 
+      <% if (folderPath.length > 0 || currentFolder.id) { %>
+        مسیر: 
+        <a href="/files">ریشه</a>
+        <% folderPath.forEach(function(folder) { %>
+          / <a href="/files?folderId=<%= folder.id %>"><%= folder.name %></a>
+        <% }); %>
+        <% if (currentFolder.id) { %>
+          / <%= currentFolder.name %>
+        <% } %>
+      <% } else { %>
+        فایل‌های من
+      <% } %>
+    </h5>
+    <div>
+      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createFolderModal">
+        <i class="bi bi-folder-plus"></i> ایجاد پوشه
+      </button>
+      <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
+        <i class="bi bi-upload"></i> آپلود فایل
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <% if (folders.length === 0 && files.length === 0) { %>
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> این پوشه خالی است.
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th style="width: 50px;"></th>
+              <th>نام</th>
+              <th>نوع</th>
+              <th>اندازه</th>
+              <th>تاریخ ایجاد</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (parentId) { %>
+              <tr>
+                <td><i class="bi bi-arrow-up-circle text-primary"></i></td>
+                <td colspan="5">
+                  <a href="/files<%= currentFolder.parentId ? '?folderId=' + currentFolder.parentId : '' %>">
+                    ../ بازگشت به پوشه قبلی
+                  </a>
+                </td>
+              </tr>
+            <% } %>
+            
+            <% folders.forEach(function(folder) { %>
+              <tr>
+                <td><i class="bi bi-folder text-warning"></i></td>
+                <td>
+                  <a href="/files?folderId=<%= folder.id %>"><%= folder.name %></a>
+                </td>
+                <td>پوشه</td>
+                <td>-</td>
+                <td><%= new Date(folder.createdAt).toLocaleString('fa-IR') %></td>
+                <td>
+                  <a href="/files/folder/delete/<%= folder.id %>" class="btn btn-sm btn-danger" onclick="return confirm('آیا از حذف این پوشه اطمینان دارید؟')">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+            
+            <% files.forEach(function(file) { %>
+              <tr>
+                <td>
+                  <% if (file.mimeType.startsWith('image/')) { %>
+                    <i class="bi bi-file-image text-info"></i>
+                  <% } else if (file.mimeType.startsWith('audio/')) { %>
+                    <i class="bi bi-file-music text-success"></i>
+                  <% } else if (file.mimeType.startsWith('video/')) { %>
+                    <i class="bi bi-file-play text-danger"></i>
+                  <% } else if (file.mimeType.startsWith('text/')) { %>
+                    <i class="bi bi-file-text text-primary"></i>
+                  <% } else if (file.mimeType.includes('pdf')) { %>
+                    <i class="bi bi-file-pdf text-danger"></i>
+                  <% } else if (file.mimeType.includes('word') || file.mimeType.includes('document')) { %>
+                    <i class="bi bi-file-word text-primary"></i>
+                  <% } else if (file.mimeType.includes('excel') || file.mimeType.includes('spreadsheet')) { %>
+                    <i class="bi bi-file-excel text-success"></i>
+                  <% } else if (file.mimeType.includes('zip') || file.mimeType.includes('rar') || file.mimeType.includes('compressed')) { %>
+                    <i class="bi bi-file-zip text-warning"></i>
+                  <% } else { %>
+                    <i class="bi bi-file-earmark"></i>
+                  <% } %>
+                </td>
+                <td>
+                  <a href="<%= file.path %>" target="_blank"><%= file.originalName %></a>
+                </td>
+                <td><%= file.mimeType.split('/')[1] %></td>
+                <td><%= formatBytes(file.size) %></td>
+                <td><%= new Date(file.createdAt).toLocaleString('fa-IR') %></td>
+                <td>
+                  <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#renameFileModal" data-file-id="<%= file.id %>" data-file-name="<%= file.originalName %>">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <a href="/files/delete/<%= file.id %>" class="btn btn-sm btn-danger" onclick="return confirm('آیا از حذف این فایل اطمینان دارید؟')">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Create Folder Modal -->
+<div class="modal fade" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createFolderModalLabel">ایجاد پوشه جدید</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/files/folder" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="folderName" class="form-label">نام پوشه</label>
+            <input type="text" class="form-control" id="folderName" name="name" required>
+          </div>
+          <input type="hidden" name="parentId" value="<%= parentId %>">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">ایجاد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Upload File Modal -->
+<div class="modal fade" id="uploadFileModal" tabindex="-1" aria-labelledby="uploadFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadFileModalLabel">آپلود فایل</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/files/upload" method="POST" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="file" class="form-label">انتخاب فایل</label>
+            <input class="form-control" type="file" id="file" name="file" required>
+          </div>
+          <input type="hidden" name="folderId" value="<%= parentId %>">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">آپلود</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Rename File Modal -->
+<div class="modal fade" id="renameFileModal" tabindex="-1" aria-labelledby="renameFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="renameFileModalLabel">تغییر نام فایل</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="renameFileForm" action="" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="newFileName" class="form-label">نام جدید</label>
+            <input type="text" class="form-control" id="newFileName" name="newName" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+          <button type="submit" class="btn btn-primary">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Helper function to format bytes
+  function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+  
+  // Setup rename file modal
+  const renameFileModal = document.getElementById('renameFileModal');
+  renameFileModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const fileId = button.getAttribute('data-file-id');
+    const fileName = button.getAttribute('data-file-name');
+    
+    const form = renameFileModal.querySelector('#renameFileForm');
+    const nameInput = renameFileModal.querySelector('#newFileName');
+    
+    form.action = `/files/rename/${fileId}`;
+    nameInput.value = fileName;
+  });
+</script>
+
+<%- include('blocks/footer') %> 

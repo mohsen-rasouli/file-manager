@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | سیستم مدیریت فایل</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+    }
+    .main-content {
+      margin-top: 20px;
+      min-height: calc(100vh - 160px);
+    }
+    .footer {
+      margin-top: 30px;
+      padding: 15px 0;
+      background-color: #f8f9fa;
+      border-top: 1px solid #e7e7e7;
+      text-align: center;
+      font-size: 14px;
+      color: #6c757d;
+    }
+    .sidebar {
+      background-color: #f8f9fa;
+      border-left: 1px solid #e7e7e7;
+      padding: 20px;
+      height: 100%;
+    }
+    .sidebar .nav-link {
+      color: #212529;
+      padding: 8px 16px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+    }
+    .sidebar .nav-link:hover {
+      background-color: #e9ecef;
+    }
+    .sidebar .nav-link.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .sidebar .nav-link i {
+      margin-left: 8px;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .user-info {
+      padding: 15px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .user-info .user-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+  </style>
+  <%- style %>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="/">سیستم مدیریت فایل</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link <%= active === 'files' ? 'active' : '' %>" href="/files">فایل‌ها</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= active === 'profile' ? 'active' : '' %>" href="/profile">پروفایل</a>
+          </li>
+          <% if (user && user.isAdmin) { %>
+            <li class="nav-item">
+              <a class="nav-link <%= active === 'users' ? 'active' : '' %>" href="/users">مدیریت کاربران</a>
+            </li>
+          <% } %>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle"></i> <%= user.name %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="/profile"><i class="bi bi-person"></i> پروفایل</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/auth/logout"><i class="bi bi-box-arrow-right"></i> خروج</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container main-content">
+    <div class="row">
+      <% if (showSidebar) { %>
+        <div class="col-md-3">
+          <div class="sidebar">
+            <div class="user-info">
+              <div class="user-name"><i class="bi bi-person-circle"></i> <%= user.name %></div>
+              <div class="user-role"><%= user.isAdmin ? 'مدیر' : 'کاربر' %></div>
+            </div>
+            <h6 class="sidebar-heading text-muted d-flex justify-content-between align-items-center px-3 mt-4 mb-1">
+              <span>منوی اصلی</span>
+            </h6>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link <%= active === 'files' ? 'active' : '' %>" href="/files">
+                  <i class="bi bi-folder"></i> مدیریت فایل‌ها
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link <%= active === 'profile' ? 'active' : '' %>" href="/profile">
+                  <i class="bi bi-person"></i> پروفایل
+                </a>
+              </li>
+              <% if (user && user.isAdmin) { %>
+                <h6 class="sidebar-heading text-muted d-flex justify-content-between align-items-center px-3 mt-4 mb-1">
+                  <span>مدیریت</span>
+                </h6>
+                <li class="nav-item">
+                  <a class="nav-link <%= active === 'users' ? 'active' : '' %>" href="/users">
+                    <i class="bi bi-people"></i> مدیریت کاربران
+                  </a>
+                </li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <%- body %>
+        </div>
+      <% } else { %>
+        <div class="col-md-12">
+          <%- body %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <span>سیستم مدیریت فایل &copy; <%= new Date().getFullYear() %></span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <%- script %>
+</body>
+</html> 
