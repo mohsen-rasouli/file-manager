@@ -1,0 +1,164 @@
+<%- include('blocks/header', { title: 'گزارش فعالیت کاربر', active: 'users', showSidebar: true }) %>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> گزارش فعالیت کاربر</h5>
+    <a href="/users" class="btn btn-primary btn-sm">
+      <i class="bi bi-arrow-right"></i> بازگشت به لیست کاربران
+    </a>
+  </div>
+  <div class="card-body">
+    <div class="mb-4">
+      <h6>اطلاعات کاربر</h6>
+      <div class="row">
+        <div class="col-md-6">
+          <table class="table table-sm">
+            <tbody>
+              <tr>
+                <th style="width: 150px;">نام و نام خانوادگی</th>
+                <td><%= userData.name %></td>
+              </tr>
+              <tr>
+                <th>شماره تلفن</th>
+                <td><%= userData.phone %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="logsTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="true">
+          <i class="bi bi-box-arrow-in-right"></i> ورود به سیستم
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">
+          <i class="bi bi-file-earmark"></i> عملیات فایل
+        </button>
+      </li>
+    </ul>
+    
+    <div class="tab-content" id="logsTabContent">
+      <!-- Login Logs -->
+      <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
+        <div class="mt-3">
+          <% if (loginLogs.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>تاریخ و زمان</th>
+                    <th>آدرس IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% loginLogs.forEach(function(log, index) { %>
+                    <tr>
+                      <td><%= index + 1 %></td>
+                      <td><%= new Date(log.loginAt).toLocaleString('fa-IR') %></td>
+                      <td><%= log.ipAddress %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info mt-3">
+              <i class="bi bi-info-circle"></i> هیچ گزارشی از ورود کاربر به سیستم ثبت نشده است.
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- File Operations -->
+      <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+        <div class="mt-3">
+          <% if (fileOps.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>تاریخ و زمان</th>
+                    <th>نوع عملیات</th>
+                    <th>جزئیات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% fileOps.forEach(function(op, index) { %>
+                    <tr>
+                      <td><%= index + 1 %></td>
+                      <td><%= new Date(op.createdAt).toLocaleString('fa-IR') %></td>
+                      <td>
+                        <% if (op.operation === 'UPLOAD_FILE') { %>
+                          <span class="badge bg-success">آپلود فایل</span>
+                        <% } else if (op.operation === 'DELETE_FILE') { %>
+                          <span class="badge bg-danger">حذف فایل</span>
+                        <% } else if (op.operation === 'RENAME_FILE') { %>
+                          <span class="badge bg-info">تغییر نام فایل</span>
+                        <% } else if (op.operation === 'CREATE_FOLDER') { %>
+                          <span class="badge bg-primary">ایجاد پوشه</span>
+                        <% } else if (op.operation === 'DELETE_FOLDER') { %>
+                          <span class="badge bg-danger">حذف پوشه</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary"><%= op.operation %></span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (op.details) { %>
+                          <% try { %>
+                            <% const details = JSON.parse(op.details); %>
+                            <% if (op.operation === 'UPLOAD_FILE' && details.name) { %>
+                              <%= details.name %> (<%= formatBytes(details.size) %>)
+                            <% } else if (op.operation === 'RENAME_FILE' && details.oldName && details.newName) { %>
+                              <%= details.oldName %> → <%= details.newName %>
+                            <% } else if (op.operation === 'CREATE_FOLDER' && details.name) { %>
+                              <%= details.name %>
+                            <% } else if ((op.operation === 'DELETE_FILE' || op.operation === 'DELETE_FOLDER') && details.name) { %>
+                              <%= details.name %>
+                            <% } else { %>
+                              <code><%= JSON.stringify(details).substring(0, 50) %><%= JSON.stringify(details).length > 50 ? '...' : '' %></code>
+                            <% } %>
+                          <% } catch (e) { %>
+                            <code><%= op.details.substring(0, 50) %><%= op.details.length > 50 ? '...' : '' %></code>
+                          <% } %>
+                        <% } else { %>
+                          -
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info mt-3">
+              <i class="bi bi-info-circle"></i> هیچ گزارشی از عملیات فایل توسط این کاربر ثبت نشده است.
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Helper function to format bytes
+  function formatBytes(bytes, decimals = 2) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+</script>
+
+<%- include('blocks/footer') %> 

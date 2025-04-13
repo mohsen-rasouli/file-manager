@@ -16,7 +16,7 @@ const db = require('./models/database');
 
 // Initialize express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Configure express
 app.set('view engine', 'ejs');

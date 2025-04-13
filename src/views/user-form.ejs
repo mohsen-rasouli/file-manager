@@ -1,0 +1,119 @@
+<%- include('blocks/header', { 
+  title: isEdit ? 'ویرایش کاربر' : 'ایجاد کاربر جدید', 
+  active: 'users', 
+  showSidebar: true 
+}) %>
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="card-title mb-0">
+      <% if (isEdit) { %>
+        <i class="bi bi-pencil"></i> ویرایش اطلاعات کاربر
+      <% } else { %>
+        <i class="bi bi-person-plus"></i> ایجاد کاربر جدید
+      <% } %>
+    </h5>
+  </div>
+  <div class="card-body">
+    <% if (error) { %>
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i> <%= error %>
+      </div>
+    <% } %>
+    
+    <form action="<%= isEdit ? '/users/edit/' + userData.id : '/users/create' %>" method="POST" class="needs-validation" novalidate>
+      <div class="mb-3">
+        <label for="name" class="form-label">نام و نام خانوادگی</label>
+        <input type="text" class="form-control" id="name" name="name" value="<%= userData.name || '' %>" required>
+        <div class="invalid-feedback">
+          لطفا نام کاربر را وارد کنید
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="phone" class="form-label">شماره تلفن</label>
+        <input type="text" class="form-control" id="phone" name="phone" value="<%= userData.phone || '' %>" required>
+        <div class="invalid-feedback">
+          لطفا شماره تلفن را وارد کنید
+        </div>
+        <div class="form-text">از این شماره برای ورود به سیستم استفاده خواهد شد</div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="password" class="form-label">
+          <% if (isEdit) { %>
+            رمز عبور جدید
+            <span class="text-muted">(در صورت عدم تغییر، خالی بگذارید)</span>
+          <% } else { %>
+            رمز عبور
+          <% } %>
+        </label>
+        <input type="password" class="form-control" id="password" name="password" <%= isEdit ? '' : 'required' %>>
+        <div class="invalid-feedback">
+          لطفا رمز عبور را وارد کنید
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="confirmPassword" class="form-label">تکرار رمز عبور</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" <%= isEdit ? '' : 'required' %>>
+        <div class="invalid-feedback">
+          رمز عبور و تکرار آن باید یکسان باشند
+        </div>
+      </div>
+      
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" value="1" id="isAdmin" name="isAdmin" <%= userData.isAdmin ? 'checked' : '' %>>
+        <label class="form-check-label" for="isAdmin">
+          دسترسی مدیر
+        </label>
+        <div class="form-text">مدیران امکان ایجاد، ویرایش و حذف کاربران را دارند</div>
+      </div>
+      
+      <div class="d-flex">
+        <button type="submit" class="btn btn-primary me-2">
+          <i class="bi bi-save"></i> ذخیره
+        </button>
+        <a href="/users" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i> انصراف
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Form validation
+  (function() {
+    'use strict'
+    
+    const forms = document.querySelectorAll('.needs-validation')
+    
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        const password = form.querySelector('#password')
+        const confirmPassword = form.querySelector('#confirmPassword')
+        
+        // Only check passwords match if password field is filled
+        if (password.value) {
+          if (password.value !== confirmPassword.value) {
+            confirmPassword.classList.add('is-invalid')
+            event.preventDefault()
+            event.stopPropagation()
+          } else {
+            confirmPassword.classList.remove('is-invalid')
+          }
+        }
+        
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>
+
+<%- include('blocks/footer') %> 

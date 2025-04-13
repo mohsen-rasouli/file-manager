@@ -21,7 +21,7 @@
 
 1. کلون کردن مخزن:
    ```
-   git clone [repository-url]
+   git clone https://github.com/mohsen-rasouli/file-manager.git
    cd file-manager
    ```
 
@@ -93,10 +93,3 @@
 - Multer (برای آپلود فایل)
 - Bcrypt (برای رمزنگاری)
 
-## مجوز
-
-این پروژه تحت مجوز MIT منتشر شده است.
-
-## نویسنده
-
-توسعه توسط [نام شما] 

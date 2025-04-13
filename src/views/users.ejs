@@ -1,0 +1,86 @@
+<%- include('blocks/header', { title: 'مدیریت کاربران', active: 'users', showSidebar: true }) %>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0"><i class="bi bi-people"></i> لیست کاربران</h5>
+    <div>
+      <a href="/users/create" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> کاربر جدید
+      </a>
+    </div>
+  </div>
+  <div class="card-body">
+    <% if (success === 'created') { %>
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> کاربر جدید با موفقیت ایجاد شد.
+      </div>
+    <% } else if (success === 'updated') { %>
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> اطلاعات کاربر با موفقیت به‌روزرسانی شد.
+      </div>
+    <% } else if (success === 'deleted') { %>
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> کاربر با موفقیت حذف شد.
+      </div>
+    <% } %>
+    
+    <% if (error) { %>
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-circle"></i> <%= error %>
+      </div>
+    <% } %>
+    
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>نام</th>
+            <th>شماره تلفن</th>
+            <th>نقش</th>
+            <th>تاریخ ثبت نام</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(userItem) { %>
+            <tr>
+              <td><%= userItem.id %></td>
+              <td><%= userItem.name %></td>
+              <td><%= userItem.phone %></td>
+              <td>
+                <% if (userItem.isAdmin) { %>
+                  <span class="badge bg-primary">مدیر</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">کاربر عادی</span>
+                <% } %>
+              </td>
+              <td><%= new Date(userItem.createdAt).toLocaleString('fa-IR') %></td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group">
+                  <a href="/users/logs/<%= userItem.id %>" class="btn btn-info" title="گزارش‌ها">
+                    <i class="bi bi-clock-history"></i>
+                  </a>
+                  <a href="/users/edit/<%= userItem.id %>" class="btn btn-warning" title="ویرایش">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <% if (userItem.id !== user.id) { %>
+                    <a href="/users/delete/<%= userItem.id %>" class="btn btn-danger" title="حذف" onclick="return confirm('آیا از حذف این کاربر اطمینان دارید؟')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  <% } else { %>
+                    <button class="btn btn-outline-danger" disabled title="نمی‌توانید خود را حذف کنید">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('blocks/footer') %> 
